@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMF Topic Archiver</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Theme tokens ─────────────────────────────────────────── */
+:root {
+  --bg: #07091a;
+  --surface: rgba(255,255,255,0.052);
+  --surface2: rgba(255,255,255,0.032);
+  --border: rgba(255,255,255,0.09);
+  --hi: rgba(255,255,255,0.07);
+  --accent: #818cf8; --accent2: #6366f1;
+  --teal: #2dd4bf;
+  --text: #dde2f8; --sub: #9da8cc; --muted: #4e5878;
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171;
+  --r: 14px;
+  --blur: blur(22px) saturate(165%);
+  --card-shadow: 0 8px 32px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.07);
+  --b-purple-bg:rgba(99,102,241,0.14);  --b-purple-fg:#a5b4fc;
+  --b-teal-bg:rgba(20,184,166,0.14);    --b-teal-fg:#5eead4;
+  --b-blue-bg:rgba(59,130,246,0.14);    --b-blue-fg:#93c5fd;
+  --b-red-bg:rgba(239,68,68,0.14);      --b-red-fg:#fca5a5;
+  --b-yellow-bg:rgba(245,158,11,0.14);  --b-yellow-fg:#fde68a;
+  --b-gray-bg:rgba(255,255,255,0.06);   --b-gray-fg:var(--muted);
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  --bg: #eaedff;
+  --surface: rgba(255,255,255,0.65);
+  --surface2: rgba(255,255,255,0.45);
+  --border: rgba(120,135,220,0.28);
+  --hi: rgba(255,255,255,0.9);
+  --accent: #4f46e5; --accent2: #6366f1;
+  --teal: #0d9488;
+  --text: #181c38; --sub: #363c62; --muted: #6e7ca0;
+  --ok: #059669; --warn: #b45309; --danger: #dc2626;
+  --card-shadow: 0 8px 32px rgba(70,85,200,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+  --b-purple-bg:rgba(79,70,229,0.11);  --b-purple-fg:#3730a3;
+  --b-teal-bg:rgba(13,148,136,0.11);   --b-teal-fg:#115e59;
+  --b-blue-bg:rgba(29,78,216,0.11);    --b-blue-fg:#1e3a8a;
+  --b-red-bg:rgba(185,28,28,0.11);     --b-red-fg:#991b1b;
+  --b-yellow-bg:rgba(146,64,14,0.11);  --b-yellow-fg:#78350f;
+  --b-gray-bg:rgba(0,0,0,0.07);        --b-gray-fg:var(--muted);
+  color-scheme: light;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+body {
+  font-family: 'Sora', system-ui, sans-serif;
+  min-height: 100vh;
+  color: var(--text);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 65% 55% at 10% 15%, rgba(99,102,241,0.20) 0%, transparent 100%),
+    radial-gradient(ellipse 55% 50% at 88% 82%, rgba(45,212,191,0.13) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 40% at 62% 4%,  rgba(168,85,247,0.11) 0%, transparent 100%);
+  background-attachment: fixed;
+  transition: background-color .35s, color .35s;
+}
+main { max-width: 1000px; margin: 0 auto; padding: 28px 20px 70px; }
+
+/* ── Header ───────────────────────────────────────────────── */
+header {
+  padding: 12px 28px;
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: inset 0 1px 0 var(--hi), 0 4px 20px rgba(0,0,0,0.12);
+  transition: background .35s, border-color .35s;
+}
+.logo {
+  font-size: 1.5rem;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+header h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  background: linear-gradient(120deg, var(--accent) 0%, var(--teal) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+}
+header p { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
+/* ── Theme toggle ─────────────────────────────────────────── */
+#theme-toggle {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 6px 14px 6px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--sub);
+  white-space: nowrap;
+  transition: all .22s;
+}
+#theme-toggle:hover { background: var(--border); color: var(--text); }
+.t-icon { font-size: 1rem; line-height: 1; }
+
+/* ── Card (glass) ─────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--card-shadow);
+  transition: background .35s, border-color .35s, box-shadow .35s;
+}
+.card-title {
+  font-size: 0.67rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.4px;
+  color: var(--muted); margin-bottom: 14px;
+}
+
+/* ── Inputs ───────────────────────────────────────────────── */
+.input-row { display: flex; gap: 10px; }
+.input-row input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 11px 16px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.input-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.input-row input::placeholder { color: var(--muted); }
+
+.date-row {
+  display: flex; gap: 10px; align-items: center;
+  margin-top: 12px; flex-wrap: wrap;
+}
+.date-row label { font-size: 0.78rem; color: var(--muted); white-space: nowrap; font-weight: 500; }
+.date-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 0.83rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+  width: 138px;
+}
+.date-input:focus { border-color: var(--accent); }
+.date-input::placeholder { color: var(--muted); font-size: 0.76rem; }
+.date-hint { font-size: 0.73rem; color: var(--muted); }
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: all .18s;
+}
+.btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn:active { transform: translateY(0) scale(.98); filter: none; }
+.btn:disabled { opacity: .38; cursor: not-allowed; pointer-events: none; filter: none; transform: none; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+}
+.btn-teal { background: rgba(20,184,166,0.15); color: var(--teal); border-color: rgba(20,184,166,0.3); }
+.btn-ghost { background: var(--surface2); color: var(--text); border-color: var(--border); }
+.btn-sm { padding: 6px 13px; font-size: 0.78rem; border-radius: 8px; }
+
+/* ── Spinner ──────────────────────────────────────────────── */
+.spin {
+  width: 15px; height: 15px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .7s linear infinite;
+  display: inline-block; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Badges ───────────────────────────────────────────────── */
+.badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.71rem; font-weight: 600; }
+.b-purple { background: var(--b-purple-bg); color: var(--b-purple-fg); }
+.b-teal   { background: var(--b-teal-bg);   color: var(--b-teal-fg);   }
+.b-blue   { background: var(--b-blue-bg);   color: var(--b-blue-fg);   }
+.b-red    { background: var(--b-red-bg);    color: var(--b-red-fg);    }
+.b-yellow { background: var(--b-yellow-bg); color: var(--b-yellow-fg); }
+.b-gray   { background: var(--b-gray-bg);   color: var(--b-gray-fg);   }
+
+/* ── Table ────────────────────────────────────────────────── */
+#captures-wrap { display: none; }
+#captures-wrap.show { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+thead th {
+  text-align: left; padding: 9px 12px;
+  color: var(--muted); font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .9px;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+tbody tr:hover { background: var(--surface2); }
+tbody td { padding: 10px 12px; vertical-align: middle; }
+.ts-chip { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.78rem; color: var(--muted); }
+.empty { text-align: center; padding: 32px; color: var(--muted); font-size: 0.88rem; }
+
+/* ── Status / error ───────────────────────────────────────── */
+#find-status { display: none; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.82rem; color: var(--muted); }
+#find-error  { display: none; margin-top: 10px; color: var(--danger); font-size: 0.84rem; }
+
+@media (max-width:600px) {
+  header { padding: 12px 16px; }
+  main   { padding: 18px 12px 60px; }
+  .input-row { flex-direction: column; }
+  .date-row  { gap: 8px; }
+  .date-input { width: 120px; }
+  #theme-toggle .t-label { display: none; }
+}
+</style>
+</head>
+<body>
+<script>(function(){const t=localStorage.getItem('smf-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+
+<header>
+  <div class="logo">◈</div>
+  <div>
+    <h1>SMF Topic Archiver</h1>
+    <p>Discover Wayback Machine captures · scrape threads in batches · save &amp; view</p>
+  </div>
+  <button id="theme-toggle" onclick="toggleTheme()">
+    <span class="t-icon" id="theme-icon">☀</span>
+    <span class="t-label" id="theme-label">Light</span>
+  </button>
+</header>
+
+<main>
+
+  <!-- URL + date filter input -->
+  <div class="card">
+    <div class="card-title">Enter SMF Topic URL</div>
+
+    <div class="input-row">
+      <input id="topic-url" type="text"
+        placeholder="http://example.com/index.php?topic=42.0"
+        autocomplete="off" spellcheck="false"
+        onkeydown="if(event.key==='Enter') findCaptures()">
+      <button class="btn btn-primary" id="btn-find" onclick="findCaptures()">🔍 Find Captures</button>
+    </div>
+
+    <!-- Date filters -->
+    <div class="date-row">
+      <label>From</label>
+      <input class="date-input" id="date-from" type="text"
+        placeholder="e.g. 2015 or 2015-06"
+        title="Year (2015), Year-Month (2015-06), or Year-Month-Day (2015-06-01)">
+      <label>To</label>
+      <input class="date-input" id="date-to" type="text"
+        placeholder="e.g. 2020 or 2020-12"
+        title="Year (2020), Year-Month (2020-12), or Year-Month-Day (2020-12-31)">
+      <span class="date-hint">YYYY, YYYY-MM, or YYYY-MM-DD — leave blank for all</span>
+    </div>
+
+    <div id="find-status">
+      <div class="spin"></div>
+      <span id="find-status-text">Querying Wayback CDX API…</span>
+    </div>
+    <div id="find-error"></div>
+  </div>
+
+  <!-- Captures table -->
+  <div id="captures-wrap">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div class="card-title" style="margin-bottom:0;">Archived Captures</div>
+        <div id="cap-badges" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Archive Date</th>
+              <th>Timestamp</th>
+              <th>Wayback URL</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="cap-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saved scrapes -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:0;">Saved Scrapes</div>
+      <button class="btn btn-ghost btn-sm" onclick="loadSaved()">↻ Refresh</button>
+    </div>
+    <div id="saved-list">
+      <div class="empty">No saved scrapes yet.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const next = isLight ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('smf-theme', next);
+  document.getElementById('theme-icon').textContent  = next === 'light' ? '☽' : '☀';
+  document.getElementById('theme-label').textContent = next === 'light' ? 'Dark' : 'Light';
+}
+(function(){
+  const t = document.documentElement.getAttribute('data-theme') || 'dark';
+  const icon = document.getElementById('theme-icon');
+  const lbl  = document.getElementById('theme-label');
+  if (icon) icon.textContent = t === 'light' ? '☽' : '☀';
+  if (lbl)  lbl.textContent  = t === 'light' ? 'Dark' : 'Light';
+})();
+
+const $ = id => document.getElementById(id);
+let _captures = [];
+
+// ── Find captures ─────────────────────────────────────────
+async function findCaptures() {
+  const url      = $('topic-url').value.trim();
+  const dateFrom = $('date-from').value.trim();
+  const dateTo   = $('date-to').value.trim();
+
+  if (!url) { showError('Please enter a topic URL.'); return; }
+  if (!url.includes('topic=')) { showError('URL must contain "topic=" — e.g. index.php?topic=42.0'); return; }
+
+  const dateRe = /^\d{4}(-\d{2}(-\d{2})?)?$/;
+  if (dateFrom && !dateRe.test(dateFrom)) { showError('Invalid "From" date. Use YYYY, YYYY-MM, or YYYY-MM-DD.'); return; }
+  if (dateTo   && !dateRe.test(dateTo))   { showError('Invalid "To" date. Use YYYY, YYYY-MM, or YYYY-MM-DD.'); return; }
+
+  _captures = [];
+  $('cap-tbody').innerHTML = '';
+  $('cap-badges').innerHTML = '';
+  $('captures-wrap').classList.remove('show');
+  $('find-error').style.display = 'none';
+  $('btn-find').disabled = true;
+  $('find-status').style.display = 'flex';
+  $('find-status-text').textContent = 'Querying Wayback CDX API…';
+
+  try {
+    const resp = await fetch('/api/captures', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ url, date_from: dateFrom, date_to: dateTo }),
+    });
+    const data = await resp.json();
+
+    $('find-status').style.display = 'none';
+    $('btn-find').disabled = false;
+
+    if (data.error) { showError(data.error); return; }
+
+    _captures = data.captures;
+    renderCaptures(_captures, dateFrom, dateTo);
+
+  } catch (e) {
+    $('find-status').style.display = 'none';
+    $('btn-find').disabled = false;
+    showError('Network error: ' + e.message);
+  }
+}
+
+function showError(msg) {
+  const el = $('find-error');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+}
+
+function renderCaptures(captures, dateFrom, dateTo) {
+  if (!captures.length) {
+    showError('No archived captures found for this URL' + (dateFrom || dateTo ? ' in the specified date range.' : '.'));
+    return;
+  }
+
+  $('captures-wrap').classList.add('show');
+  const tbody = $('cap-tbody');
+  tbody.innerHTML = '';
+
+  captures.forEach((cap, i) => {
+    const scrapeUrl =
+      `/scrape?ts=${encodeURIComponent(cap.timestamp)}` +
+      `&url=${encodeURIComponent(cap.original)}` +
+      `&date=${encodeURIComponent(cap.date_human)}`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--muted);font-size:0.8rem;">${i + 1}</td>
+      <td><strong>${esc(cap.date_human)}</strong></td>
+      <td><span class="ts-chip">${cap.timestamp}</span></td>
+      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        <a href="${esc(cap.wayback_url)}" target="_blank"
+           style="color:var(--accent);font-size:0.78rem;text-decoration:none;"
+           title="${esc(cap.wayback_url)}">${esc(cap.wayback_url.slice(0, 60))}…</a>
+      </td>
+      <td>
+        <a class="btn btn-teal btn-sm" href="${scrapeUrl}" target="_blank">🚀 Scrape</a>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  const bc = $('cap-badges');
+  bc.innerHTML = '';
+  bc.append(mkBadge(`${captures.length} captures`, 'b-purple'));
+  if (dateFrom) bc.append(mkBadge(`From ${dateFrom}`, 'b-gray'));
+  if (dateTo)   bc.append(mkBadge(`To ${dateTo}`, 'b-gray'));
+}
+
+// ── Saved scrapes ─────────────────────────────────────────
+async function loadSaved() {
+  try {
+    const resp = await fetch('/api/saved');
+    const data = await resp.json();
+    const el   = $('saved-list');
+
+    if (!data.saves || !data.saves.length) {
+      el.innerHTML = '<div class="empty">No saved scrapes yet. Scrape a capture and save it.</div>';
+      return;
+    }
+
+    el.innerHTML = '';
+    for (const s of data.saves) {
+      const pagesInfo = s.total_pages
+        ? `${s.pages_scraped || '?'}/${s.total_pages} pages`
+        : '';
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;';
+      row.innerHTML = `
+        <div style="flex:1;min-width:180px;">
+          <div style="font-weight:700;font-size:0.92rem;margin-bottom:5px;">${esc(s.title)}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge b-teal">${s.total_posts} posts</span>
+            ${pagesInfo ? `<span class="badge b-purple">${pagesInfo}</span>` : ''}
+            <span class="badge b-gray">Captured ${esc(s.date_human)}</span>
+            <span class="badge b-gray">Saved ${esc(s.saved_at)}</span>
+          </div>
+        </div>
+        <a href="/view/${s.id}" target="_blank" class="btn btn-teal btn-sm">👁 View</a>
+        <button class="btn btn-ghost btn-sm" onclick="deleteSave('${s.id}', this)">🗑</button>`;
+      el.appendChild(row);
+    }
+  } catch (e) {
+    $('saved-list').innerHTML = `<div class="empty" style="color:var(--danger);">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+async function deleteSave(id, btn) {
+  if (!confirm('Permanently delete this saved scrape?')) return;
+  btn.disabled = true;
+  await fetch(`/api/saved/${id}`, { method: 'DELETE' });
+  loadSaved();
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function mkBadge(txt, cls) {
+  const s = document.createElement('span');
+  s.className = `badge ${cls}`;
+  s.textContent = txt;
+  return s;
+}
+
+loadSaved();
+</script>
+</body>
+</html>

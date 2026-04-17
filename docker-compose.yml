@@ -1,0 +1,8 @@
+services:
+  smf-archiver:
+    build: .
+    ports:
+      - "5110:5110"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
