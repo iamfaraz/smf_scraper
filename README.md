@@ -1,4 +1,4 @@
-# SMF Topic Archiver
+# SMF Topic Archiver - Developed Using Claude Code
 
 A web application for discovering, scraping, and preserving archived copies of Simple Machines Forum (SMF) threads via the Wayback Machine.
 
